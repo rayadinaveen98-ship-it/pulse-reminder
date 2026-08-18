@@ -1,5 +1,5 @@
 (()=>{
-  const VERSION='4.0.2';
+  const VERSION='4.1.0';
 
   function pushStatusText(){
     if(!('Notification' in window)) return 'Notifications unavailable';
@@ -22,25 +22,14 @@
     }
   }
 
+  // push.js is the single owner of the Push Delivery settings card.
   window.requestNotifications=v4EnablePush;
   window.notificationText=pushStatusText;
-
-  const originalSettingsView=window.settingsView;
-  if(typeof originalSettingsView==='function'){
-    window.settingsView=function(){
-      let html=originalSettingsView();
-      const iosNeedsInstall=typeof pulseIsIOS==='function'&&pulseIsIOS()&&typeof pulseIsStandalone==='function'&&!pulseIsStandalone();
-      const status=pushStatusText();
-      const pushCard=`<article class="settings-card" id="push-delivery-core"><h2>Push delivery</h2><div class="status-line"><span class="status-dot"></span><div><b>${status}</b><p>${iosNeedsInstall?'On iPhone, add Pulse to Home Screen and open it there before enabling push.':'This registers this browser/device with Pulse for real scheduled server push.'}</p></div></div><button class="secondary" onclick="requestNotifications()">Enable on this device</button><button class="secondary" onclick="pulseTestPush()">Send test push now</button><small>Permission alone is not enough. “Push connected” means Supabase has a real subscription for this device.</small></article>`;
-      if(html.includes('<section class="settings-grid">')) html=html.replace('<section class="settings-grid">','<section class="settings-grid">'+pushCard);
-      return html;
-    };
-  }
 
   const patch=()=>{
     document.querySelectorAll('.brand small').forEach(el=>el.textContent='V'+VERSION);
     document.querySelectorAll('.version-box b').forEach(el=>el.textContent='Pulse '+VERSION);
-    document.querySelectorAll('.version-box p').forEach(el=>el.textContent='Cloud sync + real Web Push scheduler active.');
+    document.querySelectorAll('.version-box p').forEach(el=>el.textContent='Multi-device reliability, delivery health and incremental cloud sync.');
     document.querySelectorAll('.sidebar-action').forEach(btn=>{
       if(btn.textContent.includes('Notification')||btn.textContent.includes('Push')||btn.textContent.includes('Permission')) btn.innerHTML='🔔 '+pushStatusText();
     });

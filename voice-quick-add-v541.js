@@ -1,6 +1,6 @@
 // Pulse V5.4.1 — Voice Quick Add using browser speech recognition
 (()=>{
-const VERSION='5.4.1',Recognition=window.SpeechRecognition||window.webkitSpeechRecognition;let rec=null,listening=false,finalText='',interimText='',lang=localStorage.getItem('pulse.voice.lang')||'en-IN',stopForParse=false;
+const Recognition=window.SpeechRecognition||window.webkitSpeechRecognition;let rec=null,listening=false,finalText='',interimText='',lang=localStorage.getItem('pulse.voice.lang')||'en-IN',stopForParse=false;
 const supported=()=>!!Recognition;
 function input(){return document.getElementById('qa-input')}
 function clean(s){return String(s||'').replace(/\s+/g,' ').trim()}
@@ -15,6 +15,6 @@ window.pulseVoiceStop=function(parse=true){if(!listening||!rec)return;stopForPar
 window.pulseVoiceCancelListening=function(){stopForParse=false;if(rec){try{rec.abort()}catch{}}listening=false;rec=null;interimText='';sheet()};
 window.pulseVoiceCancel=function(){stopForParse=false;if(rec){try{rec.abort()}catch{}}listening=false;rec=null;interimText='';document.getElementById('voice541-root')?.remove()};
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&listening)pulseVoiceCancelListening()});
-const br=window.render;window.render=function(){br();mount();document.querySelectorAll('.brand small').forEach(x=>x.textContent='V'+VERSION);document.querySelectorAll('.version-box b').forEach(x=>x.textContent='Pulse '+VERSION)};
-setTimeout(()=>{mount();render()},0);window.PULSE_VERSION=VERSION;
+if(window.PulseRuntime)PulseRuntime.afterRender(mount);else console.warn('PulseRuntime missing; Voice Quick Add will mount once.');
+setTimeout(mount,0);
 })();

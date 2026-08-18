@@ -1,5 +1,5 @@
 (()=>{
-  const VERSION='4.0.1';
+  const VERSION='4.0.2';
 
   function pushStatusText(){
     if(!('Notification' in window)) return 'Notifications unavailable';
@@ -12,7 +12,7 @@
 
   async function v4EnablePush(){
     try{
-      if(typeof pulseRegisterPush!=='function') throw new Error('Push module is not loaded yet. Refresh Pulse once and try again.');
+      if(typeof pulseRegisterPush!=='function') throw new Error('Pulse push module failed to initialize. Please reload once; if this persists, Pulse will report it as a V4 module error.');
       await pulseRegisterPush();
       if(typeof toast==='function') toast('Push connected on this device ✓');
       render();
@@ -22,11 +22,9 @@
     }
   }
 
-  // Force the sidebar notification action to use the real Web Push registration path.
   window.requestNotifications=v4EnablePush;
   window.notificationText=pushStatusText;
 
-  // Integrate Push Delivery directly into Settings HTML so it cannot disappear due render-hook order.
   const originalSettingsView=window.settingsView;
   if(typeof originalSettingsView==='function'){
     window.settingsView=function(){
@@ -44,15 +42,13 @@
     document.querySelectorAll('.version-box b').forEach(el=>el.textContent='Pulse '+VERSION);
     document.querySelectorAll('.version-box p').forEach(el=>el.textContent='Cloud sync + real Web Push scheduler active.');
     document.querySelectorAll('.sidebar-action').forEach(btn=>{
-      if(btn.textContent.includes('Notifications')) btn.innerHTML='🔔 '+pushStatusText();
+      if(btn.textContent.includes('Notification')||btn.textContent.includes('Push')||btn.textContent.includes('Permission')) btn.innerHTML='🔔 '+pushStatusText();
     });
   };
 
   const oldRender=window.render;
-  if(typeof oldRender==='function'){
-    window.render=function(){ oldRender(); patch(); };
-  }
+  if(typeof oldRender==='function') window.render=function(){oldRender();patch();};
   document.addEventListener('DOMContentLoaded',patch);
-  setTimeout(()=>{patch(); if(typeof state!=='undefined'&&state.tab==='settings') render();},0);
+  setTimeout(()=>{patch();if(typeof state!=='undefined'&&state.tab==='settings')render();},0);
   window.PULSE_VERSION=VERSION;
 })();

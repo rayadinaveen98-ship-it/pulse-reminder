@@ -1,32 +1,6 @@
-// Pulse V4.0B reliability hotfix
-const pulseIsIOS=/iPad|iPhone|iPod/.test(navigator.userAgent);
-const pulseIsStandalone=window.matchMedia?.('(display-mode: standalone)').matches||window.navigator.standalone===true;
+// Pulse V4 reliability hotfix: auth throttling + account guidance only.
+// Notification/push behavior now lives exclusively in push.js to avoid global collisions.
 
-// Give clear platform-specific notification guidance. On iOS, Web Push permission
-// is available to Home Screen web apps, not a normal Safari tab.
-notificationText=function(){
-  if(pulseIsIOS&&!pulseIsStandalone)return 'Install Pulse for notifications';
-  if(!('Notification' in window))return 'Notifications unavailable';
-  return Notification.permission==='granted'?'Notifications enabled':'Enable notifications';
-};
-requestNotifications=async function(){
-  if(pulseIsIOS&&!pulseIsStandalone){
-    alert('On iPhone/iPad, add Pulse to your Home Screen first. Open the Share menu → Add to Home Screen, then launch Pulse from its Home Screen icon and enable notifications there.');
-    return;
-  }
-  if(!('Notification' in window)){
-    alert('This browser does not expose notification permission for Pulse. Try an installed Pulse app/PWA or a supported browser.');
-    return;
-  }
-  const p=await Notification.requestPermission();
-  if(p==='granted'){
-    new Notification('Pulse',{body:'Notification permission enabled. Scheduled push delivery is being connected in the next V4 step.'});
-    if(pulseUser) pulsePushAll().catch(pulseCloudError);
-  } else if(p==='denied') alert('Notifications are blocked for Pulse. You can re-enable them from your device/browser notification settings.');
-  render();
-};
-
-// Replace the magic-link sender with clearer throttling/account behavior.
 pulseSendMagicLink=async function(e){
   e.preventDefault();
   const email=document.getElementById('pulse-auth-email').value.trim();
@@ -47,7 +21,6 @@ pulseSendMagicLink=async function(e){
   document.querySelector('.cloud-auth-card').innerHTML=`<div class="cloud-auth-logo">✉</div><p class="section-kicker">CHECK YOUR EMAIL</p><h1>Sign-in link sent</h1><p>Open the email and tap the secure link. To sync the same reminders across devices, sign in with the same email on each device. A different email creates a separate Pulse account.</p><button class="secondary" onclick="pulseCloseAuth()">Continue locally for now</button>`;
 };
 
-// Make account semantics explicit in Settings.
 const pulseHotfixPatchSettings=pulsePatchSettingsUI;
 pulsePatchSettingsUI=function(){
   pulseHotfixPatchSettings();

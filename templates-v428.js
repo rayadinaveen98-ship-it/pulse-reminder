@@ -1,5 +1,5 @@
-// Pulse V4.2.10 — stateful reminder templates
-(()=>{const VERSION='4.2.10';let templates=[];
+// Pulse V4.2.11 — stateful, auth-aware reminder templates
+(()=>{const VERSION='4.2.11';let templates=[];
 const safeData=r=>({title:r.title||'',category:r.category||'Personal',type:r.type||'reminder',priority:r.priority||'normal',notes:r.notes||'',subtasks:[...(r.subtasks||[])],alertOffsets:[...(r.alertOffsets||[r.alertOffset??15])],persistent:!!r.persistent,repeat:r.repeat||'Never',recurrenceConfig:r.recurrenceConfig?JSON.parse(JSON.stringify(r.recurrenceConfig)):null,time:r.due?new Date(r.due).toTimeString().slice(0,5):'09:00'});
 async function load(){if(!pulseUser){templates=[];return}let {data,error}=await pulseCloud.from('reminder_templates').select('*').eq('user_id',pulseUser.id).order('updated_at',{ascending:false});if(error)throw error;templates=data||[]}
 function templateBar(){return `<div class="v428-template-bar"><select id="v428tpl"><option value="">Start from scratch</option>${templates.map(t=>`<option value="${t.id}" ${state.modal?.templateId===t.id?'selected':''}>${esc(t.name)}</option>`).join('')}</select><button type="button" class="secondary" onclick="pulseApplyTemplate()">Use template</button><button type="button" class="secondary" onclick="pulseOpenTemplates()">Manage</button></div>`}
@@ -13,5 +13,7 @@ function manager(){return `<div class="modal-backdrop" onclick="state.modal=null
 const bs=window.sheet;window.sheet=function(){let h=bs();if(!state.sheet||state.sheet.type==='snooze')return h;let id=state.sheet.id;if(!id)return h;return h.replace(`<button onclick="duplicateReminder('${id}')">⧉ Duplicate</button>`,`<button onclick="duplicateReminder('${id}')">⧉ Duplicate</button><button onclick="pulseSaveTemplateFromReminder('${id}')">▣ Save as template</button>`)};
 const bd=window.detail;window.detail=function(id){let h=bd(id);if(!id||!h)return h;return h.replace(/(<div class="detail-actions">)/,`$1<button class="secondary" onclick="pulseSaveTemplateFromReminder('${id}')">Save as template</button>`)};
 const br=window.render;window.render=function(){br();document.querySelectorAll('.brand small').forEach(x=>x.textContent='V'+VERSION);document.querySelectorAll('.version-box b').forEach(x=>x.textContent='Pulse '+VERSION)};window.PULSE_VERSION=VERSION;
+// Keep templates aligned with the restored/authenticated account on every device.
+if(pulseCloud?.auth?.onAuthStateChange)pulseCloud.auth.onAuthStateChange((event)=>{if(event==='SIGNED_IN'||event==='TOKEN_REFRESHED'||event==='INITIAL_SESSION'){setTimeout(()=>load().then(()=>{if(!state.modal)render()}).catch(e=>console.warn('Template auth load',e)),0)}else if(event==='SIGNED_OUT'){templates=[]}});
 const boot=async()=>{if(pulseUser)try{await load()}catch(e){console.warn('Template load',e)}render()};setTimeout(boot,300);
 })();

@@ -2,17 +2,19 @@
 
 Pulse is a mobile-first personal reminder and automation command center.
 
-## V1 features
+## Current capabilities
 
-- Create one-time reminders, routines and smart-reminder placeholders
-- Categories for Movies, Content, Instagram, Personal, Health, Game Dev and Work
-- Priority, due date/time, repeat rules and contextual notes
-- Complete, snooze and delete actions
-- Search and category filters
-- Dark/light interface
-- Local browser persistence
-- Browser notification permission
-- Installable PWA manifest and offline service worker
+- Create one-time and recurring reminders with categories, priority, notes and multiple notification offsets
+- Complete, snooze, restore, pause and delete reminder flows
+- Cloud sync across signed-in devices
+- Web push delivery with connected-device diagnostics
+- Calendar month/week/day views
+- Google Calendar import/export sync
+- Reminder templates
+- Natural-language Quick Add with confirmation preview
+- Voice Quick Add
+- Global search and advanced filters
+- Dark/light interface and installable PWA support
 
 ## Run locally
 
@@ -20,8 +22,8 @@ Serve the repository with any static web server and open `index.html` through HT
 
 ## Deployment
 
-This repository is ready for a zero-build static deployment on Vercel. Import the GitHub repository `rayadinaveen98-ship-it/pulse-reminder`; no build command or output directory is required.
+This repository is a zero-build static Vercel deployment. The production app is deployed from the `main` branch.
 
-## Next milestone
+## Current milestone
 
-Cloud sync and scheduling via Supabase, push delivery, Google Calendar sync and real smart automation checks.
+Pulse 6.0A — architecture consolidation. Existing behavior is being migrated from stacked version-specific render/layout wrappers into a centralized runtime lifecycle before the visual polish stages begin.

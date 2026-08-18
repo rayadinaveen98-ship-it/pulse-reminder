@@ -1,0 +1,55 @@
+// Pulse V4.2 — multiple alerts + persistent reminders
+(()=>{
+ const VERSION='4.2.0';
+ const choices=[['At time',0],['10 min before',10],['15 min before',15],['30 min before',30],['1 hour before',60],['1 day before',1440]];
+ const label=v=>choices.find(x=>x[1]===Number(v))?.[0]||`${v} min before`;
+ const norm=r=>{if(!Array.isArray(r.alertOffsets))r.alertOffsets=[Number(r.alertOffset??settings.defaultAlert??15)];r.alertOffsets=[...new Set(r.alertOffsets.map(Number).filter(n=>Number.isFinite(n)&&n>=0))].sort((a,b)=>b-a);if(!r.alertOffsets.length)r.alertOffsets=[0];r.alertOffset=r.alertOffsets[0];r.persistent=!!r.persistent;return r};
+ reminders.forEach(norm);
+ const oldSave=window.save; window.save=function(){reminders.forEach(norm);return oldSave();};
+ const oldFp=window.pulseV41Fingerprint;
+ window.pulseV42AlertOffsets=r=>norm(r).alertOffsets;
+
+ function selected(r,v){return norm(r).alertOffsets.includes(v)}
+ function alertPicker(r){return `<fieldset class="v42-alerts"><legend>Alerts</legend><p class="muted">Choose one or more notification times.</p>${choices.map(([l,v])=>`<label class="v42-check"><input type="checkbox" name="v42alert" value="${v}" ${selected(r,v)?'checked':''}><span>${l}</span></label>`).join('')}</fieldset><label class="v42-persistent"><input id="fper" type="checkbox" ${r.persistent?'checked':''}><span><b>Persistent reminder</b><small>If still incomplete, Pulse repeats the notification every 15 minutes for up to 3 follow-ups.</small></span></label>`;}
+
+ const baseModal=window.modal;
+ window.modal=function(){let html=baseModal();if(!state.modal)return html;const ed=state.modal.mode==='edit',r=norm(ed?(reminders.find(x=>x.id===state.modal.id)||{}):{alertOffset:Number(settings.defaultAlert??15),persistent:!!settings.persistentByDefault});html=html.replace(/<label>Alert<select id="fa">[\s\S]*?<\/select><\/label>/,alertPicker(r));return html;};
+
+ const baseSaveForm=window.saveForm;
+ window.saveForm=function(e){
+   const vals=[...document.querySelectorAll('input[name="v42alert"]:checked')].map(x=>Number(x.value));
+   if(document.querySelector('input[name="v42alert"]')&&!vals.length){e.preventDefault();alert('Choose at least one alert time.');return;}
+   const modalState=state.modal?{...state.modal}:null;
+   const persistent=!!document.getElementById('fper')?.checked;
+   // Base V3 expects #fa. Supply a temporary compatible select, then persist the V4.2 fields.
+   let temp=null;if(!document.getElementById('fa')){temp=document.createElement('select');temp.id='fa';temp.style.display='none';temp.innerHTML=`<option value="${vals[0]??0}" selected></option>`;e.target.appendChild(temp);}
+   baseSaveForm(e);temp?.remove();
+   let target=null;if(modalState?.mode==='edit')target=reminders.find(x=>x.id===modalState.id);else target=reminders[0];
+   if(target){target.alertOffsets=vals.length?vals:[Number(target.alertOffset||0)];target.alertOffset=target.alertOffsets[0];target.persistent=persistent;oldSave();if(pulseUser)pulsePushAll().catch(pulseCloudError);}
+   render();
+ };
+
+ const baseCard=window.card;window.card=function(r){r=norm(r);let h=baseCard(r);const summary=r.alertOffsets.map(label).join(' + ');h=h.replace(/<span>🔔 [^<]*<\/span>/,`<span>🔔 ${summary}</span>`);if(r.persistent)h=h.replace('</div></div><div class="card-actions">','<span class="persistent-tag">↻ Persistent</span></div></div><div class="card-actions">');return h;};
+
+ // Replace V4.1 incremental sync with a multiple-alert aware, idempotent version.
+ if(typeof pulseCloud!=='undefined'){
+   const fp=r=>JSON.stringify({title:r.title,notes:r.notes||'',category:r.category,type:r.type,priority:r.priority,due:r.due,repeat:r.repeat,alertOffsets:norm(r).alertOffsets,enabled:r.enabled!==false,persistent:!!r.persistent,subtasks:r.subtasks||[],completedSubtasks:r.completedSubtasks||[]});
+   const fpKey=()=>pulseUser?`pulse.sync.fp.${pulseUser.id}`:'pulse.sync.fp.none';
+   const read=()=>{try{return JSON.parse(localStorage.getItem(fpKey())||'{}')}catch{return{}}};
+   async function syncOne(r){
+     norm(r);let q=await pulseCloud.from('reminders').upsert(pulseDbReminder(r),{onConflict:'user_id,source_local_id'}).select('id').single();if(q.error)throw q.error;const rid=q.data.id;
+     q=await pulseCloud.from('reminder_subtasks').delete().eq('user_id',pulseUser.id).eq('reminder_id',rid);if(q.error)throw q.error;
+     const subs=(r.subtasks||[]).map((title,i)=>({reminder_id:rid,user_id:pulseUser.id,title,is_completed:(r.completedSubtasks||[]).includes(i),position:i,completed_at:(r.completedSubtasks||[]).includes(i)?new Date().toISOString():null}));if(subs.length){q=await pulseCloud.from('reminder_subtasks').insert(subs);if(q.error)throw q.error;}
+     q=await pulseCloud.from('reminder_alerts').update({status:'cancelled',updated_at:new Date().toISOString()}).eq('user_id',pulseUser.id).eq('reminder_id',rid).eq('status','pending');if(q.error)throw q.error;
+     if(r.due&&r.enabled!==false){for(const off of r.alertOffsets){const at=new Date(new Date(r.due).getTime()-off*60000).toISOString();q=await pulseCloud.from('reminder_alerts').upsert({reminder_id:rid,user_id:pulseUser.id,alert_at:at,offset_minutes:off,status:'pending',alert_kind:'scheduled',repeat_sequence:0},{onConflict:'reminder_id,alert_at'});if(q.error)throw q.error;}}
+   }
+   window.pulsePushAll=async function(){if(!pulseUser||pulseSyncing)return;pulseSyncing=true;pulseSetCloudBadge('Syncing…');try{await pulseEnsureAccount();const old=read(),next={};for(const r of reminders){norm(r);const k=String(r.id),hash=fp(r);next[k]=hash;if(old[k]!==hash)await syncOne(r);}const {data:remote,error}=await pulseCloud.from('reminders').select('id,source_local_id').eq('user_id',pulseUser.id).is('deleted_at',null);if(error)throw error;const ids=new Set(reminders.map(r=>String(r.id)));for(const x of (remote||[]).filter(x=>x.source_local_id&&!ids.has(String(x.source_local_id)))){let q=await pulseCloud.from('reminders').update({deleted_at:new Date().toISOString(),status:'deleted'}).eq('id',x.id);if(q.error)throw q.error;q=await pulseCloud.from('reminder_alerts').update({status:'cancelled',updated_at:new Date().toISOString()}).eq('reminder_id',x.id).eq('status','pending');if(q.error)throw q.error;}localStorage.setItem(fpKey(),JSON.stringify(next));pulseSetCloudBadge('Synced just now');}finally{pulseSyncing=false;}};
+ }
+
+ // Preserve all pending scheduled alert offsets when pulling from cloud.
+ const oldPull=window.pulsePullAll;
+ if(typeof oldPull==='function')window.pulsePullAll=async function(){await oldPull();if(!pulseUser)return;const {data,error}=await pulseCloud.from('reminder_alerts').select('reminder_id,offset_minutes,status,alert_kind').eq('user_id',pulseUser.id).eq('status','pending').eq('alert_kind','scheduled');if(error)throw error;const {data:db,error:re}=await pulseCloud.from('reminders').select('id,source_local_id').eq('user_id',pulseUser.id).is('deleted_at',null);if(re)throw re;const by=new Map();(data||[]).forEach(a=>{if(!by.has(a.reminder_id))by.set(a.reminder_id,[]);by.get(a.reminder_id).push(Number(a.offset_minutes||0));});const localToDb=new Map((db||[]).map(x=>[String(x.source_local_id||x.id),x.id]));reminders.forEach(r=>{const arr=by.get(localToDb.get(String(r.id)));if(arr?.length){r.alertOffsets=[...new Set(arr)].sort((a,b)=>b-a);r.alertOffset=r.alertOffsets[0];}norm(r);});oldSave();};
+
+ const baseRender=window.render;window.render=function(){baseRender();document.querySelectorAll('.brand small').forEach(el=>el.textContent='V'+VERSION);document.querySelectorAll('.version-box b').forEach(el=>el.textContent='Pulse '+VERSION);document.querySelectorAll('.version-box p').forEach(el=>el.textContent='Multiple alerts, persistent follow-ups and V4.1 reliability.');};
+ window.PULSE_VERSION=VERSION;oldSave();setTimeout(()=>render(),0);
+})();

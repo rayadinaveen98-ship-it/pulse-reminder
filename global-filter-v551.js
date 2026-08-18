@@ -1,8 +1,8 @@
 // Pulse V5.5.1 — Global Search + Advanced Filters
 (()=>{
-const VERSION='5.5.1',KEY='pulse.v551.filters';
+const KEY='pulse.v551.filters';
 const defaults={categories:[],priority:'any',recurrence:'any',status:'active',due:'any',from:'',to:''};
-let gf=loadFilters();
+let gf=loadFilters(),calendarFull=null;
 function loadFilters(){try{return{...defaults,...JSON.parse(localStorage.getItem(KEY)||'{}')}}catch{return{...defaults}}}
 function persist(){localStorage.setItem(KEY,JSON.stringify(gf))}
 function startDay(d=new Date()){let x=new Date(d);x.setHours(0,0,0,0);return x}
@@ -13,7 +13,7 @@ function advanced(r){if(gf.categories.length&&!gf.categories.includes(r.category
 return true}
 function filterReminder(r){let baseCategory=state.filter==='All'||r.category===state.filter;return baseCategory&&textMatch(r)&&advanced(r)}
 window.pulseGlobalFilterMatch=filterReminder;
-const baseMatch=window.match;window.match=function(r){return filterReminder(r)};
+window.match=function(r){return filterReminder(r)};
 function activeCount(){let n=gf.categories.length+(gf.priority!=='any')+(gf.recurrence!=='any')+(gf.status!=='active')+(gf.due!=='any');if(gf.due==='custom')n+=(!!gf.from)+(!!gf.to);return n}
 function summary(){let a=[];if(gf.categories.length)a.push(gf.categories.join(', '));if(gf.priority!=='any')a.push(gf.priority==='important'?'Important':'Normal priority');if(gf.recurrence!=='any')a.push(gf.recurrence==='recurring'?'Recurring':'One-time');if(gf.status!=='active')a.push(gf.status==='paused'?'Paused':'Any status');if(gf.due!=='any')a.push({overdue:'Overdue',today:'Today',tomorrow:'Tomorrow','7days':'Next 7 days',custom:'Custom dates'}[gf.due]);return a}
 function close(){document.getElementById('v551-filter-root')?.remove()}
@@ -22,8 +22,10 @@ window.pulseFiltersOpen=sheet;window.pulseFiltersClose=close;window.pulseFilterD
 window.pulseFiltersApply=function(){gf.categories=[...document.querySelectorAll('[data-v551-cat]:checked')].map(x=>x.value);gf.priority=document.getElementById('v551-priority').value;gf.recurrence=document.getElementById('v551-recurrence').value;gf.status=document.getElementById('v551-status').value;gf.due=document.getElementById('v551-due').value;gf.from=document.getElementById('v551-from')?.value||'';gf.to=document.getElementById('v551-to')?.value||'';persist();close();render()};
 window.pulseFiltersReset=function(){gf={...defaults};persist();close();state.filter='All';render()};
 window.pulseFilterClearOne=function(k){if(k==='categories')gf.categories=[];else gf[k]=defaults[k];persist();render()};
-function decorateControls(){if(!['today','upcoming','all','calendar'].includes(state.tab))return;let actions=document.querySelector('.top-actions');if(actions&&!actions.querySelector('.v551-filter-btn')){let b=document.createElement('button');b.className='secondary v551-filter-btn';b.onclick=sheet;b.innerHTML=`⚙ Filters${activeCount()?` <span>${activeCount()}</span>`:''}`;actions.insertBefore(b,actions.querySelector('.primary'))}let q=document.querySelector('.search-box input');if(q){q.placeholder='Search title, notes, category, subtasks…';q.setAttribute('aria-label','Global reminder search')}let qa=document.getElementById('qa-wrap');if(qa&&!document.getElementById('v551-active')){let arr=summary();if(arr.length||state.query){let bar=document.createElement('div');bar.id='v551-active';bar.className='v551-active';bar.innerHTML=`<span><b>${reminders.filter(filterReminder).length}</b> matching reminder${reminders.filter(filterReminder).length===1?'':'s'}</span><div>${arr.map(x=>`<span class="v551-pill">${esc(x)}</span>`).join('')}${state.query?`<span class="v551-pill">Search: “${esc(state.query)}”</span>`:''}<button class="v551-clear" onclick="pulseFiltersReset();state.query='';render()">Clear all</button></div>`;qa.insertAdjacentElement('afterend',bar)}}}
+function decorateControls(){if(!['today','upcoming','all','calendar'].includes(state.tab))return;let actions=document.querySelector('.top-actions');if(actions&&!actions.querySelector('.v551-filter-btn')){let b=document.createElement('button');b.className='secondary v551-filter-btn';b.onclick=sheet;b.innerHTML=`⚙ Filters${activeCount()?` <span>${activeCount()}</span>`:''}`;actions.insertBefore(b,actions.querySelector('.primary'))}let q=document.querySelector('.search-box input');if(q){q.placeholder='Search title, notes, category, subtasks…';q.setAttribute('aria-label','Global reminder search')}let qa=document.getElementById('qa-wrap');if(qa&&!document.getElementById('v551-active')){let arr=summary();if(arr.length||state.query){let count=reminders.filter(filterReminder).length,bar=document.createElement('div');bar.id='v551-active';bar.className='v551-active';bar.innerHTML=`<span><b>${count}</b> matching reminder${count===1?'':'s'}</span><div>${arr.map(x=>`<span class="v551-pill">${esc(x)}</span>`).join('')}${state.query?`<span class="v551-pill">Search: “${esc(state.query)}”</span>`:''}<button class="v551-clear" onclick="pulseFiltersReset();state.query='';render()">Clear all</button></div>`;qa.insertAdjacentElement('afterend',bar)}}}
 function filterCalendarDOM(){if(state.tab!=='calendar')return;document.querySelectorAll('[data-reminder-id]').forEach(el=>{let r=reminders.find(x=>String(x.id)===String(el.dataset.reminderId));if(r&&!filterReminder(r))el.style.display='none'})}
-const oldRender=window.render;window.render=function(){let full=reminders;if(state.tab==='calendar'){reminders=full.filter(filterReminder);try{oldRender()}finally{reminders=full}}else oldRender();decorateControls();filterCalendarDOM();document.querySelectorAll('.brand small').forEach(x=>x.textContent='V'+VERSION);document.querySelectorAll('.version-box b').forEach(x=>x.textContent='Pulse '+VERSION)};
-window.pulseGlobalFilters=()=>({...gf});setTimeout(()=>render(),0);window.PULSE_VERSION=VERSION;
+function beforeRender(){if(state.tab==='calendar'){calendarFull=reminders;reminders=calendarFull.filter(filterReminder)}}
+function afterRender(){if(calendarFull){reminders=calendarFull;calendarFull=null}decorateControls();filterCalendarDOM()}
+if(window.PulseRuntime){PulseRuntime.beforeRender(beforeRender);PulseRuntime.afterRender(afterRender)}else console.error('PulseRuntime missing; Global Filters lifecycle not installed.');
+window.pulseGlobalFilters=()=>({...gf});setTimeout(()=>render(),0);
 })();

@@ -1,6 +1,6 @@
 // Pulse V4.2.11 — authoritative cloud pull boundary with durable alert preferences
 (()=>{
-const VERSION='4.2.11';
+let authoritativePullCount=0;
 const offsets=r=>{const raw=Array.isArray(r.alertOffsets)?r.alertOffsets:[Number(r.alertOffset??settings.defaultAlert??0)],out=[...new Set(raw.map(Number).filter(n=>Number.isFinite(n)&&n>=0))].sort((a,b)=>b-a);return out.length?out:[0]};
 const dbOffsets=x=>{const raw=Array.isArray(x.notification_offsets)?x.notification_offsets:[],out=[...new Set(raw.map(Number).filter(n=>Number.isFinite(n)&&n>=0))].sort((a,b)=>b-a);return out.length?out:[0]};
 const fingerprint=r=>JSON.stringify({title:r.title,notes:r.notes||'',category:r.category,type:r.type,priority:r.priority,due:r.due,repeat:r.repeat,recurrenceConfig:r.recurrenceConfig||{},alertOffsets:offsets(r),enabled:r.enabled!==false,persistent:!!r.persistent,subtasks:r.subtasks||[],completedSubtasks:r.completedSubtasks||[]});
@@ -25,7 +25,11 @@ window.pulsePullAll=async function(){
     });
     history=(hhq.data||[]).map(x=>({hid:x.source_local_id||x.id,title:x.reminder_title,category:x.metadata?.category||'Personal',completedAt:x.occurred_at,snapshot:x.metadata?.snapshot||null}));
     if(usq.data)settings={...settings,theme:usq.data.theme==='system'?'dark':usq.data.theme,timezone:usq.data.timezone,defaultAlert:usq.data.default_alert_minutes,persistentByDefault:usq.data.persistent_notifications};
-    pulseLocalSave();writeFingerprints();render();pulseSetCloudBadge('Synced from cloud');
+    pulseLocalSave();
+    writeFingerprints();
+    authoritativePullCount++;
+    render();
+    pulseSetCloudBadge('Synced from cloud');
   }finally{pulsePulling=false}
 };
 window.pulseStartRealtime=async function(){
@@ -40,7 +44,12 @@ window.pulseStartRealtime=async function(){
     .subscribe();
 };
 if(pulseSyncTimer){clearTimeout(pulseSyncTimer);pulseSyncTimer=null}
-const apply=()=>{document.querySelectorAll('.brand small').forEach(x=>x.textContent='V'+VERSION);document.querySelectorAll('.version-box b').forEach(x=>x.textContent='Pulse '+VERSION)};
-const pr=window.render;window.render=function(){pr();apply()};apply();window.PULSE_VERSION=VERSION;
-if(pulseUser)setTimeout(()=>pulseStartRealtime().catch(pulseCloudError),0)
+let bootstrapAttempts=0;
+const bootstrapAuthoritativeSync=()=>{
+  if(!pulseUser)return;
+  if(pulsePulling||state?.modal){if(bootstrapAttempts++<80)setTimeout(bootstrapAuthoritativeSync,250);return}
+  if(authoritativePullCount>0){pulseStartRealtime().catch(pulseCloudError);return}
+  pulsePullAll().then(()=>pulseStartRealtime()).catch(pulseCloudError);
+};
+if(pulseUser)setTimeout(bootstrapAuthoritativeSync,0);
 })();

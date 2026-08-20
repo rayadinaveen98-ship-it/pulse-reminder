@@ -28,4 +28,4 @@ Git deployment trigger verified during the Pulse 6.0A consolidation cycle.
 
 ## Current milestone
 
-Pulse 6.0A — architecture consolidation. Existing behavior is being migrated from stacked version-specific render/layout wrappers into a centralized runtime lifecycle before the visual polish stages begin.
+Pulse 6.0A — architecture consolidation. Existing behavior is being migrated from stacked version-specific render/layout wrappers into centralized runtime and sync coordination layers before the visual polish stages begin.

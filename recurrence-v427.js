@@ -1,6 +1,6 @@
 // Pulse V4.2.10 — advanced recurrence with draft support
 (()=>{
-const VERSION='4.2.10',types=['Never','Daily','Weekdays','Weekends','Selected days','Every X days','Every X weeks','Monthly','After completion'];
+const types=['Never','Daily','Weekdays','Weekends','Selected days','Every X days','Every X weeks','Monthly','After completion'];
 const days=[['Sun',0],['Mon',1],['Tue',2],['Wed',3],['Thu',4],['Fri',5],['Sat',6]];
 function cfg(r={}){let c=r.recurrenceConfig||{};return{type:c.type||r.repeat||'Never',interval:Math.max(1,Number(c.interval||1)),weekdays:Array.isArray(c.weekdays)?c.weekdays.map(Number):[],monthDay:Number(c.monthDay||new Date(r.due||Date.now()).getDate()),afterDays:Math.max(1,Number(c.afterDays||1))}}
 function label(c){if(c.type==='Selected days')return c.weekdays.length?c.weekdays.map(n=>days.find(x=>x[1]===n)?.[0]).join(', '):'Selected days';if(c.type==='Every X days')return `Every ${c.interval} day${c.interval===1?'':'s'}`;if(c.type==='Every X weeks')return `Every ${c.interval} week${c.interval===1?'':'s'}`;if(c.type==='Monthly')return `Monthly · day ${c.monthDay}`;if(c.type==='After completion')return `${c.afterDays} day${c.afterDays===1?'':'s'} after completion`;return c.type}
@@ -11,5 +11,5 @@ function nextDue(r,completedAt=new Date()){let c=cfg(r),d=new Date(r.due),now=ne
 window.pulseNextDue=nextDue;
 window.complete=function(id){let r=reminders.find(x=>x.id===id);if(!r)return;let at=new Date(),n=nextDue(r,at);history.unshift({hid:crypto.randomUUID(),title:r.title,category:r.category,completedAt:at.toISOString(),snapshot:{...r}});reminders=n?reminders.map(x=>x.id===id?{...x,due:n,completedSubtasks:[]}:x):reminders.filter(x=>x.id!==id);save();state.sheet=null;state.detail=null;render();toast(n?`Completed · next ${fmt(n)}`:'Completed')};
 const oldMap=window.pulseDbReminder;window.pulseDbReminder=function(r){let x=oldMap(r);x.recurrence_label=r.repeat||'Never';x.recurrence_config=cfg(r);return x};
-const br=window.render;window.render=function(){br();document.querySelectorAll('.brand small').forEach(x=>x.textContent='V'+VERSION);document.querySelectorAll('.version-box b').forEach(x=>x.textContent='Pulse '+VERSION)};window.PULSE_VERSION=VERSION;render();
+if(!state.modal)render();
 })();

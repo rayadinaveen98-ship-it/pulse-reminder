@@ -1,0 +1,57 @@
+// Pulse V6.2.2 — unified SVG icon system
+(()=>{
+const paths={
+  bolt:'<path d="m13 2-9 12h7l-1 8 9-12h-7z"/>',
+  home:'<path d="m3 11 9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/>',
+  calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/>',
+  sparkles:'<path d="m12 3-1.2 3.2L7.5 7.5l3.3 1.3L12 12l1.2-3.2 3.3-1.3-3.3-1.3z"/><path d="m18 13-.8 2.2L15 16l2.2.8L18 19l.8-2.2L21 16l-2.2-.8zM5 14l-.7 1.7L2.5 16.5l1.8.7L5 19l.7-1.8 1.8-.7-1.8-.8z"/>',
+  list:'<path d="M8 6h13M8 12h13M8 18h13"/><path d="m3 6 .8.8L5.5 5M3 12l.8.8 1.7-1.8M3 18l.8.8 1.7-1.8"/>',
+  history:'<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/>',
+  settings:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1A1.7 1.7 0 0 0 4.6 15 1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1A1.7 1.7 0 0 0 9 4.6 1.7 1.7 0 0 0 10 3V2.8h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1z"/>',
+  bell:'<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>',
+  check:'<path d="m5 12 4 4L19 6"/>',
+  movie:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m7 5 2 4m4-4 2 4m4-4 2 4M3 9h18"/>',
+  play:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="m10 9 5 3-5 3z"/>',
+  instagram:'<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".7" fill="currentColor" stroke="none"/>',
+  user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+  heart:'<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8z"/><path d="M7 12h3l1-3 2 6 1-3h3"/>',
+  gamepad:'<path d="M6 9h12a4 4 0 0 1 3.7 5.5l-1.3 3a2.5 2.5 0 0 1-4.1.8L14.5 16h-5l-1.8 2.3a2.5 2.5 0 0 1-4.1-.8l-1.3-3A4 4 0 0 1 6 9z"/><path d="M8 12v4M6 14h4M16 13h.01M18 15h.01"/>',
+  briefcase:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5h8v2M3 12h18M10 12v2h4v-2"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  repeat:'<path d="m17 2 4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/>',
+  tag:'<path d="M20 13 11 22l-9-9V4h9z"/><circle cx="7" cy="9" r="1"/>',
+  more:'<circle cx="5" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1" fill="currentColor" stroke="none"/>',
+  x:'<path d="M6 6l12 12M18 6 6 18"/>',
+  mic:'<rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"/>',
+  edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4z"/>',
+  copy:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/>',
+  pause:'<path d="M9 5v14M15 5v14"/>',
+  playTriangle:'<path d="m8 5 11 7-11 7z"/>',
+  external:'<path d="M14 3h7v7M10 14 21 3"/><path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"/>',
+  trash:'<path d="M3 6h18M8 6V4h8v2M19 6l-1 15H6L5 6M10 10v7M14 10v7"/>',
+  left:'<path d="m15 18-6-6 6-6"/>',
+  right:'<path d="m9 18 6-6-6-6"/>',
+  rotate:'<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/>',
+  sliders:'<path d="M4 6h10M18 6h2M4 12h3M11 12h9M4 18h7M15 18h5"/><circle cx="16" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="13" cy="18" r="2"/>',
+  download:'<path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 21h14"/>'
+};
+function svg(name,cls=''){return `<svg class="picon ${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[name]||paths.sparkles}</svg>`}
+window.PulseIcons={svg};
+const navMap={Today:'home',Upcoming:'calendar',Calendar:'calendar',Automations:'sparkles',Smart:'sparkles','All reminders':'list',All:'list',History:'history'};
+const catMap={purple:'movie',red:'play',pink:'instagram',blue:'user',green:'heart',amber:'gamepad',cyan:'briefcase'};
+function setOnly(el,name){if(!el||el.dataset.picon===name)return;el.innerHTML=svg(name);el.dataset.picon=name}
+function prefix(el,name,strip=/^[\s⌂▦✦☷↺⚙🔔🎙↻＋+◷✓✎⧉Ⅱ▶↗⌫•••]+/u){if(!el||el.dataset.picon===name)return;let label=el.textContent.replace(strip,'').trim();el.textContent=label;let s=document.createElement('span');s.className='picon-slot';s.innerHTML=svg(name);el.prepend(s);el.dataset.picon=name}
+function decorateNav(){document.querySelectorAll('.sidebar .nav-item,.mobile-nav .nav-item,.drawer-nav').forEach(b=>{let spans=b.querySelectorAll(':scope > span'),label=(spans[1]?.textContent||b.textContent).trim();let name=navMap[label];if(name&&spans[0])setOnly(spans[0],name)});document.querySelectorAll('.sidebar-action').forEach(b=>{let t=b.textContent.trim();if(/settings/i.test(t))prefix(b,'settings');else if(/notification/i.test(t))prefix(b,'bell')});setOnly(document.querySelector('.brand-mark'),'bolt');setOnly(document.querySelector('.mobile-top-title .brand-mark'),'bolt');setOnly(document.querySelector('.mobile-add'),'plus');setOnly(document.querySelector('.mobile-quick-add'),'plus')}
+function decorateCards(){document.querySelectorAll('.category-icon').forEach(el=>{for(const [cl,n] of Object.entries(catMap))if(el.classList.contains(cl)){setOnly(el,n);break}});document.querySelectorAll('.focus-icon,.automation-icon').forEach(el=>setOnly(el,'sparkles'));document.querySelectorAll('.chev').forEach(el=>setOnly(el,'right'));document.querySelectorAll('.reminder-card .check,.history-check').forEach(el=>setOnly(el,'check'));document.querySelectorAll('.reminder-card .card-actions button').forEach(el=>setOnly(el,'more'));document.querySelectorAll('.reminder-card .meta-row').forEach(row=>{let a=[...row.children];if(a[0])prefix(a[0],'clock');if(a[1])prefix(a[1],'repeat');if(a[2])prefix(a[2],'bell');if(a[3])prefix(a[3],'tag')})}
+function decorateChrome(){document.querySelectorAll('.icon-btn').forEach(b=>{if(b.textContent.trim()==='×'||/close/i.test(b.getAttribute('aria-label')||''))setOnly(b,'x')});document.querySelectorAll('.search-box').forEach(box=>{if(box.querySelector(':scope > .picon-slot'))return;[...box.childNodes].filter(n=>n.nodeType===3&&n.textContent.trim()).forEach(n=>n.remove());let s=document.createElement('span');s.className='picon-slot search-icon';s.innerHTML=svg('search');box.prepend(s)});document.querySelectorAll('.qa-spark').forEach(el=>setOnly(el,'sparkles'));document.querySelectorAll('.voice541-mic,.voice541-orb span').forEach(el=>setOnly(el,'mic'));document.querySelectorAll('.v551-filter-btn').forEach(el=>prefix(el,'sliders'));}
+function decorateSheets(){document.querySelectorAll('.action-sheet button').forEach(b=>{let t=b.textContent.trim().toLowerCase(),n=t.includes('edit')?'edit':t.includes('mark complete')?'check':t.includes('snooze')?'clock':t.includes('duplicate')?'copy':t.includes('pause')?'pause':t.includes('resume')?'playTriangle':t.includes('view details')?'external':t.includes('delete')?'trash':null;if(n)prefix(b,n)});}
+function decorateCalendar(){document.querySelectorAll('.v510-cal-controls button').forEach(b=>{let t=b.textContent.trim();if(t==='‹')setOnly(b,'left');else if(t==='›')setOnly(b,'right');else if(t==='Today')prefix(b,'calendar')});document.querySelectorAll('.v510-agenda-date .primary').forEach(b=>prefix(b,'plus'));document.querySelectorAll('.v510-agenda-item > span:last-child').forEach(el=>setOnly(el,el.closest('.v520-google-agenda')?'external':'right'));document.querySelectorAll('.v520-google-actions button').forEach(b=>{if(/sync now/i.test(b.textContent))prefix(b,'rotate')});}
+function decorateButtons(){document.querySelectorAll('button.primary,button.secondary').forEach(b=>{let t=b.textContent.trim();if(/^\+|^＋/.test(t)||/^(new reminder|new automation)$/i.test(t.replace(/^[+＋]\s*/,'')))prefix(b,'plus');else if(/request browser permission/i.test(t))prefix(b,'bell');else if(/export backup/i.test(t))prefix(b,'download');else if(/check for update/i.test(t))prefix(b,'rotate');else if(/install pulse/i.test(t))prefix(b,'download')});}
+function decorate(){decorateNav();decorateCards();decorateChrome();decorateSheets();decorateCalendar();decorateButtons()}
+let raf=0;function schedule(){if(raf)return;raf=requestAnimationFrame(()=>{raf=0;decorate()})}
+if(window.PulseRuntime)PulseRuntime.afterRender(schedule);window.addEventListener('pulse:runtime-ready',()=>PulseRuntime.afterRender(schedule),{once:true});
+new MutationObserver(schedule).observe(document.documentElement,{childList:true,subtree:true});
+setTimeout(schedule,0);
+})();

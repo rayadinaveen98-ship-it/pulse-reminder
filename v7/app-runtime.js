@@ -33,9 +33,9 @@
 
   function navigate(tab,options={}){
     const previous=state.tab;
+    if(options.closeTransient!==false)closeTransient({render:false});
     const out=legacyGo(tab);
     if(state.tab!==previous||state.tab===tab)notify('navigate',{from:previous,to:state.tab,requested:tab});
-    if(options.closeTransient!==false)closeTransient({render:false});
     return out;
   }
 

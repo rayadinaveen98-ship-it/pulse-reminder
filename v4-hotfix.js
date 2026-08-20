@@ -1,5 +1,5 @@
-// Pulse V4 reliability hotfix: auth throttling + account guidance only.
-// Notification/push behavior now lives exclusively in push.js to avoid global collisions.
+// Pulse auth compatibility: throttling + account guidance only.
+// Notification/push behavior lives exclusively in push.js.
 
 pulseSendMagicLink=async function(e){
   e.preventDefault();
@@ -33,4 +33,3 @@ pulsePatchSettingsUI=function(){
     card.appendChild(note);
   }
 };
-render();

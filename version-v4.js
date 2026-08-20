@@ -8,7 +8,7 @@
     return 'Enable notifications';
   }
 
-  async function v4EnablePush(){
+  async function enablePush(){
     try{
       if(typeof pulseRegisterPush!=='function') throw new Error('Pulse push module failed to initialize. Please reload Pulse and try again.');
       await pulseRegisterPush();
@@ -20,7 +20,17 @@
     }
   }
 
-  // Compatibility bridge only. PulseRuntime is the single owner of app version display.
-  window.requestNotifications=v4EnablePush;
+  function exportCurrentData(){
+    const version=window.PulseRuntime?.stage||window.PULSE_VERSION||'6.0A';
+    const b=new Blob([JSON.stringify({version,reminders,history,settings},null,2)],{type:'application/json'}),a=document.createElement('a');
+    a.href=URL.createObjectURL(b);
+    a.download='pulse-backup.json';
+    a.click();
+    if(typeof toast==='function')toast('Backup exported');
+  }
+
+  // Compatibility bridge only. PulseRuntime owns app version display.
+  window.requestNotifications=enablePush;
   window.notificationText=pushStatusText;
+  window.exportData=exportCurrentData;
 })();

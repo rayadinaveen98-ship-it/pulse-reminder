@@ -24,6 +24,8 @@ Serve the repository with any static web server and open `index.html` through HT
 
 This repository is a zero-build static Vercel deployment. The production app is deployed from the `main` branch.
 
+Git deployment trigger verified during the Pulse 6.0A consolidation cycle.
+
 ## Current milestone
 
 Pulse 6.0A — architecture consolidation. Existing behavior is being migrated from stacked version-specific render/layout wrappers into a centralized runtime lifecycle before the visual polish stages begin.

@@ -13,7 +13,16 @@
     registerView(tab,definition){if(tab&&definition)views.set(tab,definition);return()=>views.delete(tab)},getView(tab){return views.get(tab)},
     run(list,...args){for(const fn of [...list]){try{fn(...args)}catch(e){console.error('Pulse lifecycle hook',e)} }},
     setVersion(v){this.currentVersion=String(v||APP_VERSION);this.paintVersion()},
-    paintVersion(){document.querySelectorAll('.brand small').forEach(x=>x.textContent='V'+APP_VERSION);document.querySelectorAll('.version-box b').forEach(x=>x.textContent='Pulse '+APP_VERSION)},
+    paintVersion(){
+      document.querySelectorAll('.brand small').forEach(x=>x.textContent='V'+APP_VERSION);
+      document.querySelectorAll('.version-box b').forEach(x=>x.textContent='Pulse '+APP_VERSION);
+      document.querySelectorAll('.version-box p').forEach(x=>{
+        if(/\bV3\b|Update-safe V3/i.test(x.textContent||''))x.textContent='Centralized runtime, cloud sync and notification reliability.';
+      });
+      document.querySelectorAll('.coming span').forEach(x=>{
+        if(/\bV3\b/.test(x.textContent||''))x.textContent=(x.textContent||'').replace(/\bV3\b/g,'Pulse');
+      });
+    },
     currentTab
   };
   function remove(list,fn){const i=list.indexOf(fn);if(i>=0)list.splice(i,1)}

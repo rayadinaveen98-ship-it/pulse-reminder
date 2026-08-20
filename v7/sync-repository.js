@@ -1,5 +1,5 @@
-// Pulse V7.0E — cloud sync repository
-// Owns cloud/domain mapping and authoritative pull/push boundaries.
+// Pulse V7.0G — cloud sync repository
+// Sole owner of cloud/domain mapping and authoritative reminder/history pull/push.
 (()=>{
   const offsets=r=>{const raw=Array.isArray(r.alertOffsets)?r.alertOffsets:[Number(r.alertOffset??settings.defaultAlert??0)];const out=[...new Set(raw.map(Number).filter(n=>Number.isFinite(n)&&n>=0))].sort((a,b)=>b-a);return out.length?out:[0]};
   const dbOffsets=x=>{const raw=Array.isArray(x.notification_offsets)?x.notification_offsets:[];const out=[...new Set(raw.map(Number).filter(n=>Number.isFinite(n)&&n>=0))].sort((a,b)=>b-a);return out.length?out:[0]};
@@ -10,6 +10,7 @@
 
   function toDbReminder(r){return{user_id:pulseUser.id,title:r.title,notes:r.notes||'',category:r.category||'Personal',reminder_type:r.type||'reminder',priority:r.priority||'normal',status:r.enabled===false?'paused':'active',due_at:r.due||null,timezone:settings.timezone||'Asia/Kolkata',recurrence_rule:null,recurrence_label:r.repeat||'Never',recurrence_config:r.recurrenceConfig||{},notification_offsets:offsets(r),persistent:!!r.persistent,calendar_sync_mode:'off',source_local_id:String(r.id),completed_at:null,archived_at:null,deleted_at:null}}
   function fromDbReminder(x,subtasks=[]){const ao=dbOffsets(x);return{id:x.source_local_id||x.id,title:x.title,category:x.category,type:x.reminder_type==='automation'?'smart':x.reminder_type,priority:x.priority,due:x.due_at,repeat:x.recurrence_label||'Never',recurrenceConfig:x.recurrence_config||{},alertOffsets:ao,alertOffset:ao[0]??0,notes:x.notes||'',enabled:x.status!=='paused',persistent:!!x.persistent,subtasks:subtasks.map(y=>y.title),completedSubtasks:subtasks.map((y,i)=>y.is_completed?i:null).filter(i=>i!==null),lastResult:null}}
+  function toDbHistory(h){return{user_id:pulseUser.id,reminder_id:null,reminder_title:h.title||h.snapshot?.title||'Reminder',action:'completed',occurred_at:h.completedAt||new Date().toISOString(),metadata:{category:h.category||h.snapshot?.category||'Personal',snapshot:h.snapshot||null},source_local_id:String(h.hid)}}
   function fromDbHistory(x){return{hid:x.source_local_id||x.id,title:x.reminder_title,category:x.metadata?.category||'Personal',completedAt:x.occurred_at,snapshot:x.metadata?.snapshot||null}}
   function applySettings(x){if(!x)return;settings={...settings,theme:x.theme==='system'?'dark':x.theme,timezone:x.timezone,defaultAlert:x.default_alert_minutes,persistentByDefault:x.persistent_notifications}}
 
@@ -22,12 +23,17 @@
     if(r.due&&r.enabled!==false)for(const off of offsets(r)){const at=new Date(new Date(r.due).getTime()-off*60000).toISOString();q=await pulseCloud.from('reminder_alerts').insert({reminder_id:rid,user_id:pulseUser.id,alert_at:at,offset_minutes:off,status:'pending',alert_kind:'scheduled',repeat_sequence:0});if(q.error&&q.error.code!=='23505')throw q.error;if(q.error?.code==='23505'){q=await pulseCloud.from('reminder_alerts').update({status:'pending',offset_minutes:off,alert_kind:'scheduled',repeat_sequence:0,retry_count:0,last_error:null,delivered_at:null,updated_at:new Date().toISOString()}).eq('reminder_id',rid).eq('alert_at',at);if(q.error)throw q.error}}
   }
 
+  async function pushHistory(){
+    const rows=(history||[]).filter(h=>h?.hid).map(toDbHistory);if(!rows.length)return;
+    const q=await pulseCloud.from('completion_history').upsert(rows,{onConflict:'user_id,source_local_id'});if(q.error)throw q.error;
+  }
+
   async function pushAll(){
     if(!pulseUser||pulseSyncing)return;pulseSyncing=true;pulseSetCloudBadge('Syncing…');
     try{await pulseEnsureAccount();const old=readFp(),next={};for(const r of reminders){const k=String(r.id),hash=fingerprint(r);next[k]=hash;if(old[k]!==hash)await pushOne(r)}
       let {data,error}=await pulseCloud.from('reminders').select('id,source_local_id').eq('user_id',pulseUser.id).is('deleted_at',null);if(error)throw error;const ids=new Set(reminders.map(r=>String(r.id)));
       for(const x of(data||[]).filter(x=>x.source_local_id&&!ids.has(String(x.source_local_id)))){let q=await pulseCloud.from('reminders').update({deleted_at:new Date().toISOString(),status:'deleted'}).eq('id',x.id);if(q.error)throw q.error;q=await pulseCloud.from('reminder_alerts').update({status:'cancelled',updated_at:new Date().toISOString()}).eq('reminder_id',x.id).eq('status','pending');if(q.error)throw q.error}
-      writeFp(next);window.pulseLocalSyncQuietUntil=Date.now()+3500;pulseSetCloudBadge('Synced just now');
+      await pushHistory();writeFp(next);window.pulseLocalSyncQuietUntil=Date.now()+3500;pulseSetCloudBadge('Synced just now');
     }finally{pulseSyncing=false}
   }
 
@@ -40,5 +46,6 @@
     }finally{pulsePulling=false}
   }
 
-  window.PulseSync=Object.freeze({offsets,fingerprint,toDbReminder,fromDbReminder,fromDbHistory,pushOne,pushAll,pullAll});
+  window.PulseSync=Object.freeze({offsets,fingerprint,toDbReminder,fromDbReminder,toDbHistory,fromDbHistory,pushOne,pushHistory,pushAll,pullAll});
+  try{window.dispatchEvent(new CustomEvent('pulse:sync-ready',{detail:window.PulseSync}))}catch{}
 })();

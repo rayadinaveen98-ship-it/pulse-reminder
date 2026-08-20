@@ -2,9 +2,9 @@
   "name": "Pulse — Personal Reminders",
   "short_name": "Pulse",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#0b1020",
   "theme_color": "#0b1020",
-  "description": "Personal reminders, routines and automations.",
-  "icons": []
+  "description": "Personal reminders, routines and automations."
 }

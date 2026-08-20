@@ -1,0 +1,19 @@
+/* Pulse V6.3.2 — proportional controls: compact on desktop, touch-friendly on mobile */
+@media(min-width:621px){
+  .v42-core-grid{grid-template-columns:minmax(220px,1fr) minmax(170px,220px);align-items:end}
+  .v42-core-grid label:has(#fd),.v42-core-grid .v427-recur{grid-column:1/-1}
+  .v42-core-grid label:has(#fp){grid-column:1;max-width:190px}
+  .v42-core-grid #fc{max-width:280px}.v42-core-grid #fy{max-width:220px}.v42-core-grid #fp{max-width:190px}.v42-core-grid #fd{max-width:360px}
+  .v427-recur>select{width:min(100%,280px)}
+  .v427-options label{max-width:220px}.v427-options input{max-width:150px}
+  .v428-template-bar select{max-width:330px;flex:1 1 240px}.v428-template-bar button{flex:0 0 auto;padding-inline:14px}
+  .v42-alert-options{align-items:center}.v42-check{flex:0 0 auto;width:auto!important}
+  .v42-modal>.modal-actions .secondary,.v42-modal>.modal-actions .primary{width:auto}
+  .list-toolbar>select{width:auto;min-width:142px;max-width:190px}
+  .v551-grid select{width:min(100%,220px)}.v551-custom input{max-width:240px}
+  .settings-card select{width:auto;min-width:150px;max-width:260px}.settings-card input:not([type=checkbox]){max-width:360px}
+  .settings-card .secondary{width:auto;align-self:flex-start}
+}
+@media(max-width:620px){
+  .v42-core-grid #fc,.v42-core-grid #fy,.v42-core-grid #fp,.v42-core-grid #fd,.v427-recur>select,.v427-options label,.v427-options input,.v428-template-bar select,.list-toolbar>select,.v551-grid select,.v551-custom input,.settings-card select,.settings-card input:not([type=checkbox]){width:100%;max-width:none}
+}

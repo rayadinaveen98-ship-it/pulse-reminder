@@ -10,7 +10,9 @@
   }
 
   let revision=0;
-  let lastPushedRevision=-1;
+  // The current local state is a neutral baseline at coordinator boot. This allows
+  // the normal authenticated startup path to pull cloud state before any local edit.
+  let lastPushedRevision=0;
   let lastPushCompletedAt=0;
   let pushPromise=null;
   let pullPromise=null;

@@ -1,11 +1,11 @@
 // Pulse Calendar — runtime-registered view
 (()=>{
 const cal={view:localStorage.getItem('pulse.calendar.view')||'month',anchor:new Date(localStorage.getItem('pulse.calendar.anchor')||Date.now()),selected:new Date(localStorage.getItem('pulse.calendar.selected')||Date.now())};
-const pad=n=>String(n).padStart(2,'0'),ymd=d=>`${d.getFullYear()}-${pad(d.getMonth()+1,'0')}-${pad(d.getDate(),'0')}`,same=(a,b)=>ymd(a)===ymd(b),startDay=d=>new Date(d.getFullYear(),d.getMonth(),d.getDate()),add=(d,n)=>{let x=new Date(d);x.setDate(x.getDate()+n);return x},startWeek=d=>{let x=startDay(d),n=(x.getDay()+6)%7;x.setDate(x.getDate()-n);return x};
+const pad=n=>String(n).padStart(2,'0'),ymd=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`,same=(a,b)=>ymd(a)===ymd(b),startDay=d=>new Date(d.getFullYear(),d.getMonth(),d.getDate()),add=(d,n)=>{let x=new Date(d);x.setDate(x.getDate()+n);return x},startWeek=d=>{let x=startDay(d),n=(x.getDay()+6)%7;x.setDate(x.getDate()-n);return x};
 const eventsFor=d=>reminders.filter(r=>r.enabled&&r.due&&same(new Date(r.due),d)).sort((a,b)=>new Date(a.due)-new Date(b.due));
 const time=i=>new Date(i).toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit'}),monthName=d=>d.toLocaleDateString('en-IN',{month:'long',year:'numeric'}),dayName=d=>d.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-const requestRender=reason=>window.PulseApp?.render?.(reason)||render();
-const navigate=tab=>window.PulseApp?.navigate?.(tab)||go(tab);
+const requestRender=reason=>window.PulseApp?.render?PulseApp.render(reason):render();
+const navigate=tab=>window.PulseApp?.navigate?PulseApp.navigate(tab):go(tab);
 function persist(){localStorage.setItem('pulse.calendar.view',cal.view);localStorage.setItem('pulse.calendar.anchor',cal.anchor.toISOString());localStorage.setItem('pulse.calendar.selected',cal.selected.toISOString())}
 function setView(v){cal.view=v;if(v==='day')cal.anchor=new Date(cal.selected);persist();requestRender('calendar-view')}
 function move(n){if(cal.view==='month')cal.anchor=new Date(cal.anchor.getFullYear(),cal.anchor.getMonth()+n,1);else if(cal.view==='week')cal.anchor=add(cal.anchor,n*7);else{cal.anchor=add(cal.anchor,n);cal.selected=new Date(cal.anchor)}persist();requestRender('calendar-move')}

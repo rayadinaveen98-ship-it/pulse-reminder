@@ -1,5 +1,5 @@
 const PULSE_VAPID_PUBLIC_KEY='BGZO-2Fixle66XVngosS3CKGJjkE4ge_Eau3RldyQxBG7-7yaMS8TwxjQFlDxe5CmvLXU3rM3_hVuyJ3V-qGg48';
-const PULSE_SW_URL='/sw.js?v=4.2.6';
+const PULSE_SW_URL='/sw.js?v=6.10.0';
 function pulseB64ToUint8(base64String){const padding='='.repeat((4-base64String.length%4)%4),base64=(base64String+padding).replace(/-/g,'+').replace(/_/g,'/'),raw=atob(base64);return Uint8Array.from([...raw].map(c=>c.charCodeAt(0)))}
 function pulseIsIOS(){return /iPad|iPhone|iPod/.test(navigator.userAgent)||navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1}
 function pulseIsStandalone(){return window.matchMedia('(display-mode: standalone)').matches||navigator.standalone===true}

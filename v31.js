@@ -13,6 +13,7 @@
       <div class="mobile-drawer-section"><p class="drawer-label">Navigate</p>
         <button class="drawer-nav ${state.tab==='today'?'active':''}" onclick="mobileGo('today')"><span>⌂</span><b>Today</b></button>
         <button class="drawer-nav ${state.tab==='upcoming'?'active':''}" onclick="mobileGo('upcoming')"><span>▦</span><b>Upcoming</b></button>
+        <button class="drawer-nav ${state.tab==='calendar'?'active':''}" onclick="mobileGo('calendar')"><span>◫</span><b>Calendar</b></button>
         <button class="drawer-nav ${state.tab==='automations'?'active':''}" onclick="mobileGo('automations')"><span>✦</span><b>Automations</b></button>
         <button class="drawer-nav ${state.tab==='all'?'active':''}" onclick="mobileGo('all')"><span>☷</span><b>All reminders</b></button>
         <button class="drawer-nav ${state.tab==='history'?'active':''}" onclick="mobileGo('history')"><span>↺</span><b>History</b></button>
